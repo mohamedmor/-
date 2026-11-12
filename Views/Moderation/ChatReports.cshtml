@@ -1,0 +1,54 @@
+@model List<ChatReportRowVM>
+@{
+    ViewData["Title"] = "بلاغات المحادثات";
+    var status = (ReportStatus)ViewData["Status"]!;
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">بلاغات المحادثات</h1>
+    <a asp-action="Reports" class="btn btn-link btn-sm">&larr; بلاغات الإعلانات</a>
+</div>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(status == ReportStatus.Open ? "active" : "")" asp-action="ChatReports" asp-route-status="Open">مفتوحة</a></li>
+    <li class="nav-item"><a class="nav-link @(status == ReportStatus.Resolved ? "active" : "")" asp-action="ChatReports" asp-route-status="Resolved">تم التعامل</a></li>
+    <li class="nav-item"><a class="nav-link @(status == ReportStatus.Dismissed ? "active" : "")" asp-action="ChatReports" asp-route-status="Dismissed">مرفوضة</a></li>
+</ul>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-light border text-center py-4">مفيش بلاغات هنا.</div>
+}
+@foreach (var r in Model)
+{
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <span class="badge bg-danger">@ReportText.Reason(r.Reason)</span>
+                    <span class="fw-semibold ms-2">المُبلَّغ عنه: @r.ReportedName</span>
+                    @if (r.ReportedBlocked) { <span class="badge bg-dark">محظور</span> }
+                    <div class="small text-muted mt-1">
+                        المبلّغ: @r.ReporterName - بخصوص: @r.ListingTitle - @r.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
+                    </div>
+                    @if (!string.IsNullOrEmpty(r.Details)) { <div class="mt-1">@r.Details</div> }
+                </div>
+                @if (r.Status == ReportStatus.Open)
+                {
+                    <div class="d-flex flex-wrap gap-2 align-items-start">
+                        <form asp-action="CloseChatReport" asp-route-id="@r.Id" asp-route-dismiss="false" method="post"><button class="btn btn-success btn-sm">تم التعامل</button></form>
+                        <form asp-action="CloseChatReport" asp-route-id="@r.Id" asp-route-dismiss="true" method="post"><button class="btn btn-outline-secondary btn-sm">تجاهل</button></form>
+                        @if (!r.ReportedBlocked)
+                        {
+                            <form asp-action="ToggleBlock" asp-route-id="@r.ReportedUserId" method="post" onsubmit="return confirm('حظر المستخدم ده وإيقاف إعلاناته؟');">
+                                <button class="btn btn-outline-danger btn-sm">حظر المستخدم</button>
+                            </form>
+                        }
+                    </div>
+                }
+            </div>
+            <details class="mt-2">
+                <summary class="small text-primary" style="cursor:pointer">عرض الرسايل (الدليل)</summary>
+                <div class="border rounded p-2 mt-2 bg-light small" style="white-space:pre-line">@r.Snapshot</div>
+            </details>
+        </div>
+    </div>
+}

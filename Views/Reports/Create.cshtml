@@ -1,0 +1,31 @@
+@model ReportFormVM
+@{ ViewData["Title"] = "بلّغ عن إعلان"; }
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+        <div class="card border-0 shadow-sm p-4">
+            <h1 class="h5 mb-1">بلّغ عن إعلان</h1>
+            <p class="text-muted small">@Model.ListingTitle</p>
+            <form asp-action="Create" method="post">
+                <input type="hidden" asp-for="ListingId" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="Reason" class="form-label"></label>
+                    <select asp-for="Reason" class="form-select">
+                        <option value="">اختر السبب</option>
+                        @foreach (ReportReason r in Enum.GetValues(typeof(ReportReason)))
+                        {
+                            <option value="@((int)r)" selected="@(Model.Reason == r)">@ReportText.Reason(r)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Reason" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Details" class="form-label"></label>
+                    <textarea asp-for="Details" class="form-control" rows="3" maxlength="500"></textarea>
+                </div>
+                <button class="btn btn-danger">إرسال البلاغ</button>
+                <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ListingId" class="btn btn-link">إلغاء</a>
+            </form>
+        </div>
+    </div>
+</div>

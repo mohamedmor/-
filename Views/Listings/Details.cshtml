@@ -1,0 +1,170 @@
+@model ListingDetailsVM
+@{
+    var l = Model.Listing;
+    ViewData["Title"] = l.Title;
+    var images = l.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.SortOrder).ToList();
+    var phone = Model.SellerPhone;
+    var waNumber = phone != null && phone.StartsWith("0") ? "2" + phone : phone;
+}
+@section Head {
+    @if (l.Status == ListingStatus.Published)
+    {
+        var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content="@l.Title" />
+        <meta property="og:description" content="@l.Price.ToString("N0") ج.م - @l.Governorate" />
+        @if (images.Any())
+        {
+            <meta property="og:image" content="@(baseUrl + images[0].FilePath)" />
+        }
+    }
+}
+@if (l.Status != ListingStatus.Published && l.Status != ListingStatus.Reserved && l.Status != ListingStatus.Sold)
+{
+    <div class="alert alert-warning">الإعلان ده لسه مش ظاهر للناس (الحالة: @l.Status). إنت بس اللي شايفه.</div>
+}
+else if (l.Status == ListingStatus.Sold)
+{
+    <div class="alert alert-secondary">تم بيع الحيوان ده.</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        @if (images.Any())
+        {
+            <img id="mainImg" src="@images[0].FilePath" alt="@l.Title" class="img-fluid rounded w-100" style="max-height:440px;object-fit:cover" />
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                @foreach (var im in images)
+                {
+                    <img src="@im.FilePath" alt="" style="width:80px;height:64px;object-fit:cover;border-radius:6px;cursor:pointer"
+                         onclick="document.getElementById('mainImg').src=this.src" />
+                }
+            </div>
+        }
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4">
+            @if (l.IsFeatured) { <span class="badge badge-featured mb-2 align-self-start">مميز</span> }
+            <h1 class="h4">@l.Title</h1>
+            <div class="price fs-4 mb-2">@l.Price.ToString("N0") ج.م@(l.PricingType == PricingType.PerKg ? " / كيلو" : (l.Quantity > 1 ? " للرأس" : ""))</div>
+            @if (l.PricingType == PricingType.PerKg && l.WeightKg != null)
+            {
+                <div class="small text-muted mb-2">الوزن التقريبي @l.WeightKg كجم - الإجمالي التقريبي @((l.Price * l.WeightKg.Value).ToString("N0")) ج.م</div>
+            }
+            @if (l.Status == ListingStatus.Published)
+            {
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <button type="button" id="shareBtn" class="btn btn-outline-success btn-sm" data-title="@l.Title">مشاركة</button>
+                    <a id="waShare" class="btn btn-outline-success btn-sm" target="_blank" rel="noopener" href="#">واتساب</a>
+                    <button type="button" id="copyBtn" class="btn btn-outline-secondary btn-sm">نسخ الرابط</button>
+                </div>
+            }
+            <table class="table table-sm mb-3">
+                <tr><th>القسم</th><td>@l.Category?.Name</td></tr>
+                @if (l.Quantity > 1) { <tr><th>العدد المتاح</th><td>@l.Quantity رأس</td></tr> }
+                @if (l.Condition != null) { <tr><th>الحالة</th><td>@l.Condition.Name</td></tr> }
+                @if (l.Gender != null) { <tr><th>النوع</th><td>@(l.Gender == Gender.Male ? "ذكر" : "أنثى")</td></tr> }
+                @if (l.AgeMonths != null) { <tr><th>السن</th><td>@l.AgeMonths شهر</td></tr> }
+                <tr><th>المكان</th><td>@l.Governorate@(string.IsNullOrEmpty(l.City) ? "" : " - " + l.City)</td></tr>
+                @foreach (var a in l.Attributes)
+                {
+                    <tr><th>@a.Name</th><td>@a.Value</td></tr>
+                }
+            </table>
+
+            <div class="border-top pt-3">
+                <div class="small text-muted">البائع</div>
+                <div class="fw-semibold mb-1"><a asp-controller="Sellers" asp-action="Profile" asp-route-id="@l.SellerId" class="text-decoration-none">@Model.SellerName</a></div>
+                <div class="mb-2 small">
+                    @if (Model.SellerReviewCount > 0)
+                    {
+                        <partial name="_Stars" model="Model.SellerRating" />
+                        <a asp-controller="Sellers" asp-action="Reviews" asp-route-id="@l.SellerId" class="text-muted">@Model.SellerRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) (@Model.SellerReviewCount تقييم)</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">لا توجد تقييمات بعد</span>
+                    }
+                </div>
+                @if (Model.IsOwner)
+                {
+                    <a asp-action="My" class="btn btn-outline-secondary btn-sm">رجوع لإعلاناتي</a>
+                }
+                else if (User.Identity?.IsAuthenticated == true)
+                {
+                    @if (l.Status == ListingStatus.Published)
+                    {
+                        <form asp-controller="Messages" asp-action="Start" method="post" class="mb-3">
+                            <input type="hidden" name="listingId" value="@l.Id" />
+                            <button class="btn btn-success w-100">راسل البائع</button>
+                        </form>
+                    }
+                    @if (phone != null)
+                    {
+                        <div dir="ltr" class="fw-bold mb-2 text-start">@phone</div>
+                        <div class="d-flex gap-2">
+                            <a href="tel:@phone" class="btn btn-success btn-sm">اتصل</a>
+                            <a href="https://wa.me/@waNumber" target="_blank" rel="noopener" class="btn btn-outline-success btn-sm">واتساب</a>
+                        </div>
+                        <div class="small text-muted mt-2">الاتفاق على السعر والتوصيل بينك وبين البائع مباشرة.</div>
+                    }
+                    else
+                    {
+                        <div class="small text-muted">البائع لم يضف رقم موبايل.</div>
+                    }
+                    @if (l.Status == ListingStatus.Published)
+                    {
+                        <a asp-controller="Reports" asp-action="Create" asp-route-listingId="@l.Id" class="btn btn-link btn-sm text-danger px-0 mt-2">بلّغ عن الإعلان</a>
+                    }
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-success btn-sm">سجّل دخول لإظهار رقم البائع</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(l.Description))
+{
+    <div class="card border-0 shadow-sm p-4 mt-4">
+        <h2 class="h6">الوصف</h2>
+        <p class="mb-0" style="white-space:pre-line">@l.Description</p>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var shareBtn = document.getElementById('shareBtn');
+            if (!shareBtn) return;
+            var url = location.origin + location.pathname;
+            var title = shareBtn.getAttribute('data-title');
+
+            document.getElementById('waShare').href = 'https://wa.me/?text=' + encodeURIComponent(title + '\n' + url);
+
+            shareBtn.addEventListener('click', function () {
+                if (navigator.share) {
+                    navigator.share({ title: title, url: url }).catch(function () { });
+                } else {
+                    copy();
+                }
+            });
+            document.getElementById('copyBtn').addEventListener('click', copy);
+
+            function copy() {
+                var done = function () {
+                    var b = document.getElementById('copyBtn');
+                    var old = b.textContent; b.textContent = 'تم النسخ ✓';
+                    setTimeout(function () { b.textContent = old; }, 1800);
+                };
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(done, function () { prompt('انسخ الرابط:', url); });
+                } else {
+                    prompt('انسخ الرابط:', url);
+                }
+            }
+        })();
+    </script>
+}

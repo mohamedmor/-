@@ -1,0 +1,75 @@
+@model Listing
+@{
+    ViewData["Title"] = "مراجعة إعلان";
+    var images = Model.Images.OrderByDescending(i => i.IsMain).ThenBy(i => i.SortOrder).ToList();
+}
+<a asp-action="Index" class="btn btn-link px-0">&larr; رجوع للقائمة</a>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var im in images)
+            {
+                <a href="@im.FilePath" target="_blank"><img src="@im.FilePath" alt="" style="width:170px;height:130px;object-fit:cover;border-radius:8px" /></a>
+            }
+        </div>
+        <div class="card border-0 shadow-sm p-4 mt-3">
+            <h1 class="h5">@Model.Title</h1>
+            <div class="price mb-2">@Model.Price.ToString("N0") ج.م@(Model.PricingType == PricingType.PerKg ? " / كيلو" : "")</div>
+            <table class="table table-sm">
+                <tr><th>القسم</th><td>@Model.Category?.Name</td></tr>
+                <tr><th>الحالة</th><td>@(Model.Condition?.Name ?? "-")</td></tr>
+                <tr><th>العدد</th><td>@Model.Quantity</td></tr>
+                <tr><th>النوع</th><td>@(Model.Gender == null ? "-" : Model.Gender == Gender.Male ? "ذكر" : "أنثى")</td></tr>
+                <tr><th>السن</th><td>@(Model.AgeMonths?.ToString() ?? "-") شهر</td></tr>
+                <tr><th>الوزن</th><td>@(Model.WeightKg?.ToString() ?? "-")</td></tr>
+                <tr><th>المكان</th><td>@Model.Governorate @Model.City</td></tr>
+                @foreach (var a in Model.Attributes)
+                {
+                    <tr><th>@a.Name</th><td>@a.Value</td></tr>
+                }
+            </table>
+            <p style="white-space:pre-line" class="mb-0">@Model.Description</p>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm p-4 mb-3">
+            <div class="small text-muted">البائع</div>
+            <div class="fw-semibold">@Model.Seller?.FullName</div>
+            <div dir="ltr" class="text-start small">@Model.Seller?.PhoneNumber - @Model.Seller?.Email</div>
+            <div class="mt-2">الحالة الحالية: <span class="badge bg-secondary">@Model.Status</span></div>
+            @if (!string.IsNullOrEmpty(Model.RejectionReason))
+            {
+                <div class="small text-danger mt-1">سبب الرفض السابق: @Model.RejectionReason</div>
+            }
+        </div>
+
+        @if (Model.Status != ListingStatus.Published)
+        {
+            <form asp-action="Approve" asp-route-id="@Model.Id" method="post" class="mb-3">
+                <button class="btn btn-success w-100">موافقة ونشر</button>
+            </form>
+        }
+
+        <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="card border-0 shadow-sm p-3 mb-3">
+            <label class="form-label">سبب الرفض / إلغاء النشر</label>
+            <textarea name="reason" class="form-control mb-2" rows="2" maxlength="300" required></textarea>
+            <button class="btn btn-outline-danger">رفض</button>
+        </form>
+
+        @if (Model.Status == ListingStatus.Published)
+        {
+            <form asp-action="Feature" asp-route-id="@Model.Id" method="post" class="card border-0 shadow-sm p-3 mb-3">
+                <label class="form-label">تمييز الإعلان (أيام)</label>
+                <div class="input-group">
+                    <input type="number" name="days" class="form-control" min="0" max="365" value="7" />
+                    <button class="btn btn-warning">تمييز</button>
+                </div>
+                <div class="small text-muted mt-1">اكتب 0 لإلغاء التمييز@(Model.IsFeatured && Model.FeaturedUntil != null ? $" - مميز لحد {Model.FeaturedUntil.Value.ToLocalTime():yyyy/MM/dd}" : "").</div>
+            </form>
+        }
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('حذف نهائي؟');">
+            <button class="btn btn-outline-secondary btn-sm">حذف نهائي</button>
+        </form>
+    </div>
+</div>

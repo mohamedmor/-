@@ -1,0 +1,9 @@
+@* Model: the currently selected rating (0 = none). Posts a field named "Rating". *@
+@model int
+<div class="star-input" dir="rtl" role="radiogroup" aria-label="التقييم">
+    @for (var i = 5; i >= 1; i--)
+    {
+        <input type="radio" name="Rating" id="star@(i)" value="@i" checked="@(Model == i)" />
+        <label for="star@(i)" title="@i من 5">★</label>
+    }
+</div>

@@ -1,0 +1,107 @@
+@model SellerProfileVM
+@{
+    ViewData["Title"] = "البائع " + Model.Name;
+    var avgText = Model.AverageRating.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+}
+<div class="card border-0 shadow-sm p-4 mb-4">
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <partial name="_Avatar" model="(Model.ProfileImagePath, Model.Name, 72)" />
+                <h1 class="h4 mb-0">@Model.Name</h1>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Bio))
+            {
+                <p class="mb-2" style="white-space:pre-line">@Model.Bio</p>
+            }
+            <div class="text-muted small">
+                @(string.IsNullOrEmpty(Model.Governorate) ? "" : Model.Governorate + " - ")عضو منذ @Model.MemberSince.ToLocalTime().ToString("yyyy/MM")
+            </div>
+            <div class="d-flex gap-4 mt-3">
+                <div><div class="fs-4 fw-bold text-success">@Model.PublishedCount</div><div class="small text-muted">إعلان منشور</div></div>
+                <div><div class="fs-4 fw-bold text-success">@Model.SoldCount</div><div class="small text-muted">تم بيعه</div></div>
+                <div><div class="fs-4 fw-bold text-success">@Model.ReviewCount</div><div class="small text-muted">تقييم</div></div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                @if (Model.ReviewCount > 0)
+                {
+                    <span class="rating-big">@avgText</span>
+                    <div>
+                        <partial name="_Stars" model="Model.AverageRating" />
+                        <div class="small text-muted">من @Model.ReviewCount تقييم</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-muted">مفيش تقييمات لسه.</div>
+                }
+            </div>
+            @if (Model.ReviewCount > 0)
+            {
+                @for (var s = 5; s >= 1; s--)
+                {
+                    var pct = Model.ReviewCount == 0 ? 0 : Model.Distribution[s] * 100 / Model.ReviewCount;
+                    <div class="dist-row">
+                        <span class="small">@s ★</span>
+                        <div class="dist-bar"><span style="width:@(pct)%"></span></div>
+                        <span class="small text-muted">@Model.Distribution[s]</span>
+                    </div>
+                }
+            }
+            <div class="mt-3">
+                @switch (Model.ReviewAction)
+                {
+                    case "rate":
+                        <a asp-controller="Reviews" asp-action="Seller" asp-route-id="@Model.SellerId" class="btn btn-success btn-sm">قيّم البائع</a>
+                        break;
+                    case "edit":
+                        <a asp-controller="Reviews" asp-action="Seller" asp-route-id="@Model.SellerId" class="btn btn-outline-success btn-sm">عدّل تقييمك</a>
+                        break;
+                    case "need-chat":
+                        <div class="small text-muted">تقدر تقيّم البائع بعد ما تتواصل معاه من خلال الرسائل.</div>
+                        break;
+                    case "login":
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-outline-success btn-sm">سجّل دخول عشان تقيّم</a>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.RecentReviews.Any())
+{
+    <div class="card border-0 shadow-sm p-4 mb-4">
+        <h2 class="h6 mb-0">آراء العملاء</h2>
+        @foreach (var r in Model.RecentReviews)
+        {
+            <partial name="_ReviewItem" model="r" />
+        }
+        @if (Model.ReviewCount > Model.RecentReviews.Count)
+        {
+            <div class="pt-3"><a asp-action="Reviews" asp-route-id="@Model.SellerId">عرض كل التقييمات (@Model.ReviewCount)</a></div>
+        }
+    </div>
+}
+
+<h2 class="h5 mb-3">إعلانات @Model.Name</h2>
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-light border text-center py-4">مفيش إعلانات منشورة للبائع ده دلوقتي.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var l in Model.Items)
+        {
+            <div class="col-6 col-md-4 col-lg-3">
+                @await Html.PartialAsync("_ListingCard", l)
+            </div>
+        }
+    </div>
+}
+
+<partial name="_Pager" model="Model.Pager" />

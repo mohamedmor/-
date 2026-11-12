@@ -1,0 +1,24 @@
+@model ReviewItemVM
+<div class="review-item d-flex gap-3 py-3 border-bottom">
+    <partial name="_Avatar" model="(Model.ReviewerAvatar, Model.ReviewerName, 42)" />
+    <div class="flex-grow-1">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="fw-semibold">@Model.ReviewerName</span>
+            <partial name="_Stars" model="(double)Model.Rating" />
+            <span class="small text-muted">@Model.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd")</span>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.Comment))
+        {
+            <p class="mb-0 mt-1" style="white-space:pre-line">@Model.Comment</p>
+        }
+        @if (Model.IsMine)
+        {
+            <div class="d-flex gap-2 mt-2">
+                <a asp-controller="Reviews" asp-action="Seller" asp-route-id="@Model.SellerId" class="btn btn-outline-secondary btn-sm">تعديل</a>
+                <form asp-controller="Reviews" asp-action="Delete" asp-route-sellerId="@Model.SellerId" method="post" onsubmit="return confirm('حذف تقييمك؟');">
+                    <button class="btn btn-outline-danger btn-sm">حذف</button>
+                </form>
+            </div>
+        }
+    </div>
+</div>

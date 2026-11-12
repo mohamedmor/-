@@ -1,0 +1,39 @@
+@model List<AdminReviewRowVM>
+@{
+    ViewData["Title"] = "تقييمات البائعين";
+    var hiddenOnly = (bool)(ViewData["HiddenOnly"] ?? false);
+    var pager = (PagerVM)ViewData["Pager"]!;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h4 mb-0">تقييمات البائعين</h1>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-link btn-sm">&larr; الإعلانات</a>
+</div>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(!hiddenOnly ? "active" : "")" asp-action="Reviews">الكل</a></li>
+    <li class="nav-item"><a class="nav-link @(hiddenOnly ? "active" : "")" asp-action="Reviews" asp-route-hiddenOnly="true">المخفية</a></li>
+</ul>
+@if (!Model.Any())
+{
+    <div class="alert alert-light border text-center py-4">مفيش تقييمات هنا.</div>
+}
+@foreach (var r in Model)
+{
+    <div class="card border-0 shadow-sm mb-2 @(r.IsHidden ? "opacity-75" : "")">
+        <div class="card-body d-flex flex-wrap justify-content-between gap-2">
+            <div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <partial name="_Stars" model="(double)r.Rating" />
+                    <span class="small">@r.ReviewerName &larr; <a asp-controller="Sellers" asp-action="Profile" asp-route-id="@r.SellerId">@r.SellerName</a></span>
+                    <span class="small text-muted">@r.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                    @if (r.IsHidden) { <span class="badge bg-dark">مخفي</span> }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(r.Comment)) { <div class="mt-1" style="white-space:pre-line">@r.Comment</div> }
+            </div>
+            <div class="d-flex gap-2 align-items-start">
+                <form asp-action="ToggleReviewHidden" asp-route-id="@r.Id" method="post"><button class="btn btn-outline-secondary btn-sm">@(r.IsHidden ? "إظهار" : "إخفاء")</button></form>
+                <form asp-action="DeleteReview" asp-route-id="@r.Id" method="post" onsubmit="return confirm('حذف التقييم نهائياً؟');"><button class="btn btn-outline-danger btn-sm">حذف</button></form>
+            </div>
+        </div>
+    </div>
+}
+<partial name="_Pager" model="pager" />

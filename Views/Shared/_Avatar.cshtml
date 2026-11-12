@@ -1,0 +1,10 @@
+@* Model: (string? Path, string Name, int Size) *@
+@model (string? Path, string Name, int Size)
+@if (!string.IsNullOrEmpty(Model.Path))
+{
+    <img src="@Model.Path" alt="@Model.Name" class="avatar" style="width:@(Model.Size)px;height:@(Model.Size)px" />
+}
+else
+{
+    <span class="avatar avatar-fallback" style="width:@(Model.Size)px;height:@(Model.Size)px;font-size:@(Model.Size / 2)px">@(string.IsNullOrWhiteSpace(Model.Name) ? "?" : Model.Name.Trim().Substring(0, 1))</span>
+}

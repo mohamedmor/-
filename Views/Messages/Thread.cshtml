@@ -1,0 +1,81 @@
+@model ThreadVM
+@{ ViewData["Title"] = "محادثة مع " + Model.OtherName; }
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center gap-3 py-3">
+                <a asp-action="Inbox" class="btn btn-sm btn-outline-secondary">&rarr;</a>
+                <partial name="_Avatar" model="(Model.OtherAvatar, Model.OtherName, 44)" />
+                <div class="flex-grow-1 overflow-hidden">
+                    <a asp-controller="Sellers" asp-action="Profile" asp-route-id="@Model.OtherId" class="fw-semibold text-decoration-none">@Model.OtherName</a>
+                    <div class="small text-muted text-truncate">
+                        بخصوص: <a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.ListingId">@Model.ListingTitle</a>
+                    </div>
+                </div>
+                <a asp-controller="Reports" asp-action="Chat" asp-route-id="@Model.ConversationId" class="btn btn-sm btn-outline-danger">بلّغ</a>
+            </div>
+
+            <div id="chat" class="chat-box p-3">
+                @foreach (var m in Model.Messages)
+                {
+                    <div class="msg @(m.Mine ? "mine" : "theirs")" data-id="@m.Id">
+                        <div class="bubble">@m.Body</div>
+                        <time class="msg-time" data-utc="@m.SentAtIso"></time>
+                    </div>
+                }
+                @if (!Model.Messages.Any())
+                {
+                    <div id="emptyHint" class="text-center text-muted small py-4">ابدأ المحادثة بسؤال عن الحيوان.</div>
+                }
+            </div>
+
+            <form asp-action="Send" asp-route-id="@Model.ConversationId" method="post" class="card-footer bg-white d-flex gap-2">
+                <textarea name="body" class="form-control" rows="1" maxlength="1000" placeholder="اكتب رسالتك..." required></textarea>
+                <button class="btn btn-success px-4">إرسال</button>
+            </form>
+        </div>
+        <div class="small text-muted mt-2">
+            متبعتش فلوس أو بيانات حساسة في الرسايل قبل ما تشوف الحيوان وتتأكد. وبلّغ عن أي حد بيطلب تحويل مقدم.
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var chat = document.getElementById('chat');
+            var convId = @Model.ConversationId;
+            var lastId = @Model.LastId;
+
+            function fmt(el) {
+                var d = new Date(el.dataset.utc);
+                el.textContent = d.toLocaleString('ar-EG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+            }
+            chat.querySelectorAll('.msg-time').forEach(fmt);
+            chat.scrollTop = chat.scrollHeight;
+
+            function add(m) {
+                var hint = document.getElementById('emptyHint'); if (hint) hint.remove();
+                var wrap = document.createElement('div');
+                wrap.className = 'msg msg-new ' + (m.mine ? 'mine' : 'theirs');
+                wrap.dataset.id = m.id;
+                var bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = m.body;   // textContent: never HTML
+                var t = document.createElement('time'); t.className = 'msg-time'; t.dataset.utc = m.sentAtIso; fmt(t);
+                wrap.appendChild(bubble); wrap.appendChild(t);
+                chat.appendChild(wrap);
+            }
+
+            setInterval(function () {
+                if (document.hidden) return;
+                fetch('@Url.Action("Poll", "Messages")?id=' + convId + '&after=' + lastId, { credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : []; })
+                    .then(function (items) {
+                        var stick = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 80;
+                        items.forEach(function (m) { add(m); lastId = Math.max(lastId, m.id); });
+                        if (items.length && stick) chat.scrollTop = chat.scrollHeight;
+                    }).catch(function () { });
+            }, 6000);
+        })();
+    </script>
+}

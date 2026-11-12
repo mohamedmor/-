@@ -1,0 +1,112 @@
+@model HomeVM
+@{
+    ViewData["Title"] = "الرئيسية";
+    var heroImg1 = Url.Content("~/images/hero-1.jpg");
+    var heroImg2 = Url.Content("~/images/hero-2.jpg");
+    string? Photo(string name) =>
+        name.Contains("بقر") || name.Contains("أبقار") ? "cow" :
+        name.Contains("جاموس") ? "buffalo" :
+        name.Contains("غنم") || name.Contains("أغنام") ? "sheep" :
+        name.Contains("ماعز") ? "goat" :
+        name.Contains("كلاب") || name.Contains("كلب") ? "dog" :
+        name.Contains("قطط") || name.Contains("قطة") ? "cat" :
+        name.Contains("طيور") || name.Contains("طير") || name.Contains("دجاج") ? "birds" : null;
+    string Emoji(string name) =>
+        name.Contains("بقر") || name.Contains("أبقار") ? "🐄" :
+        name.Contains("جاموس") ? "🐃" :
+        name.Contains("غنم") || name.Contains("أغنام") ? "🐑" :
+        name.Contains("ماعز") ? "🐐" :
+        name.Contains("كلاب") || name.Contains("كلب") ? "🐕" :
+        name.Contains("قطط") || name.Contains("قطة") ? "🐈" :
+        name.Contains("طيور") || name.Contains("طير") ? "🐓" : "🐾";
+}
+
+<section class="hero mb-4">
+    <div class="hero-bg" aria-hidden="true">
+        <div class="hero-slide" style="background-image:url('@heroImg1')"></div>
+        <div class="hero-slide" style="background-image:url('@heroImg2')"></div>
+    </div>
+    <div class="hero-inner">
+        <h1 class="hero-title">
+            <span class="ln"><span style="--d:0">اشتري وبيع المواشي</span></span>
+            <span class="ln"><span style="--d:1">والحيوانات الأليفة بسهولة</span></span>
+        </h1>
+        <p class="hero-sub">أبقار، جاموس، أغنام، ماعز وأكثر. تواصل مباشرة مع البائع واتفقوا على التوصيل.</p>
+        <form class="hero-search" method="get" asp-controller="Market" asp-action="Index" role="search">
+            <input name="Q" class="form-control" placeholder="ابحث: بقرة حلابة، خروف للذبح، جاموسة..." aria-label="بحث" />
+            <button class="btn btn-warning">بحث</button>
+        </form>
+    </div>
+    <div class="hero-field" aria-hidden="true">
+        <svg class="l1" viewBox="0 0 2000 90" preserveAspectRatio="none"><path fill="#e4efe6" d="M0 50 C150 10 350 90 500 50 S850 10 1000 50 C1150 10 1350 90 1500 50 S1850 10 2000 50 V90 H0Z"/></svg>
+        <svg class="l2" viewBox="0 0 2000 90" preserveAspectRatio="none"><path fill="#e4efe6" d="M0 62 C120 30 380 90 500 62 S880 30 1000 62 C1120 30 1380 90 1500 62 S1880 30 2000 62 V90 H0Z"/></svg>
+        <svg class="l3" viewBox="0 0 2000 90" preserveAspectRatio="none"><path fill="#f1f5f0" d="M0 74 C170 52 330 92 500 74 S830 52 1000 74 C1170 52 1330 92 1500 74 S1830 52 2000 74 V90 H0Z"/></svg>
+    </div>
+</section>
+
+<h2 class="h5 fw-bold mb-3">الأقسام</h2>
+<div class="row g-3 mb-4">
+    @foreach (var c in Model.Categories)
+    {
+        <div class="col-6 col-md-3 col-lg-2 reveal">
+            <a class="cat-pill" asp-controller="Market" asp-action="Index" asp-route-categoryId="@c.Id">@{ var photo = Photo(c.Name); }
+                @if (photo != null)
+                {
+                    <img class="cat-photo" src="@Url.Content("~/images/animals/" + photo + ".jpg")" alt="" width="76" height="76" loading="lazy" />
+                }
+                else
+                {
+                    <span class="em" aria-hidden="true">@Emoji(c.Name)</span>
+                }
+                <span>@c.Name</span></a>
+        </div>
+    }
+</div>
+
+@if (Model.Featured.Any())
+{
+    <h2 class="h5 fw-bold mb-3">إعلانات مميزة</h2>
+    <div class="row g-3 mb-4">
+        @foreach (var l in Model.Featured)
+        {
+            <div class="col-6 col-md-4 col-lg-3">
+                @await Html.PartialAsync("_ListingCard", l)
+            </div>
+        }
+    </div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="h5 fw-bold mb-0">أحدث الإعلانات</h2>
+    <a asp-controller="Market" asp-action="Index" class="small">عرض الكل</a>
+</div>
+@if (!Model.Latest.Any())
+{
+    <div class="alert alert-light border text-center py-5">لا توجد إعلانات منشورة بعد.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var l in Model.Latest)
+        {
+            <div class="col-6 col-md-4 col-lg-3">
+                @await Html.PartialAsync("_ListingCard", l)
+            </div>
+        }
+    </div>
+}
+
+<section class="help-strip mt-5">
+    <a class="help-card" asp-controller="Pages" asp-action="About">
+        <span class="help-ico" aria-hidden="true">🌾</span>
+        <span><strong>من نحن</strong><small>اعرف الموقع وإزاي بيشتغل</small></span>
+    </a>
+    <a class="help-card" asp-controller="Feedback" asp-action="Create">
+        <span class="help-ico" aria-hidden="true">⭐</span>
+        <span><strong>رأيك في الموقع</strong><small>قيّمنا وقولّنا اقتراحك</small></span>
+    </a>
+    <a class="help-card" asp-controller="Contact" asp-action="Index">
+        <span class="help-ico" aria-hidden="true">💬</span>
+        <span><strong>تواصل مع الإدارة</strong><small>مشكلة أو استفسار؟ ابعتلنا</small></span>
+    </a>
+</section>

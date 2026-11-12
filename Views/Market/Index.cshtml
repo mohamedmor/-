@@ -1,0 +1,104 @@
+@model MarketVM
+@{
+    ViewData["Title"] = "تصفح الإعلانات";
+    var f = Model.Filter;
+    Dictionary<string, string?> Route(int page) => new()
+    {
+        ["Q"] = f.Q, ["CategoryId"] = f.CategoryId?.ToString(), ["ConditionId"] = f.ConditionId?.ToString(),
+        ["Governorate"] = f.Governorate, ["PricingType"] = f.PricingType == null ? null : ((int)f.PricingType).ToString(),
+        ["MinPrice"] = f.MinPrice?.ToString(), ["MaxPrice"] = f.MaxPrice?.ToString(),
+        ["MinAge"] = f.MinAge?.ToString(), ["MaxAge"] = f.MaxAge?.ToString(),
+        ["Sort"] = f.Sort, ["Page"] = page.ToString()
+    };
+}
+<div class="row g-4">
+    <aside class="col-lg-3">
+        @{ var anyFilter = !string.IsNullOrWhiteSpace(f.Q) || f.CategoryId != null || f.ConditionId != null || !string.IsNullOrWhiteSpace(f.Governorate)
+                           || f.PricingType != null || f.MinPrice != null || f.MaxPrice != null || f.MinAge != null || f.MaxAge != null; }
+        <button class="btn btn-outline-success w-100 d-lg-none mb-2" type="button" data-bs-toggle="collapse" data-bs-target="#filters">فلترة وبحث</button>
+        <div class="collapse d-lg-block @(anyFilter ? "show" : "")" id="filters">
+        <form method="get" asp-action="Index" class="card border-0 shadow-sm p-3">
+            <h2 class="h6">فلترة</h2>
+            <div class="mb-2">
+                <input name="Q" value="@f.Q" class="form-control" placeholder="ابحث..." />
+            </div>
+            <div class="mb-2">
+                <select name="CategoryId" class="form-select">
+                    <option value="">كل الأقسام</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.Id" selected="@(f.CategoryId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-2">
+                <select name="ConditionId" class="form-select">
+                    <option value="">كل الحالات</option>
+                    @foreach (var c in Model.Conditions)
+                    {
+                        <option value="@c.Id" selected="@(f.ConditionId == c.Id)">@c.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-2">
+                <select name="Governorate" class="form-select">
+                    <option value="">كل المحافظات</option>
+                    @foreach (var g in LivestockMarket.Utilities.Egypt.Governorates)
+                    {
+                        <option value="@g" selected="@(f.Governorate == g)">@g</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-2">
+                <select name="PricingType" class="form-select">
+                    <option value="">كل أنواع التسعير</option>
+                    <option value="1" selected="@(f.PricingType == PricingType.Fixed)">سعر ثابت</option>
+                    <option value="2" selected="@(f.PricingType == PricingType.PerKg)">بالكيلو</option>
+                </select>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><input name="MinPrice" value="@f.MinPrice" type="number" min="0" class="form-control" placeholder="أقل سعر" /></div>
+                <div class="col-6"><input name="MaxPrice" value="@f.MaxPrice" type="number" min="0" class="form-control" placeholder="أعلى سعر" /></div>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-6"><input name="MinAge" value="@f.MinAge" type="number" min="0" class="form-control" placeholder="سن من (شهر)" /></div>
+                <div class="col-6"><input name="MaxAge" value="@f.MaxAge" type="number" min="0" class="form-control" placeholder="سن إلى" /></div>
+            </div>
+            <div class="mb-3">
+                <select name="Sort" class="form-select">
+                    <option value="newest" selected="@(f.Sort != "priceAsc" && f.Sort != "priceDesc")">الأحدث</option>
+                    <option value="priceAsc" selected="@(f.Sort == "priceAsc")">السعر: الأقل</option>
+                    <option value="priceDesc" selected="@(f.Sort == "priceDesc")">السعر: الأعلى</option>
+                </select>
+            </div>
+            <button class="btn btn-success w-100 mb-2">بحث</button>
+            <a asp-action="Index" class="btn btn-link btn-sm">مسح الفلاتر</a>
+        </form>
+        </div>
+    </aside>
+
+    <section class="col-lg-9">
+        <div class="d-flex justify-content-between mb-3">
+            <h1 class="h5 mb-0">الإعلانات</h1>
+            <span class="text-muted small">@Model.Total نتيجة</span>
+        </div>
+
+        @if (!Model.Items.Any())
+        {
+            <div class="alert alert-light border text-center py-5">مفيش إعلانات مطابقة للبحث.</div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var l in Model.Items)
+                {
+                    <div class="col-6 col-md-4">
+                        @await Html.PartialAsync("_ListingCard", l)
+                    </div>
+                }
+            </div>
+
+            <partial name="_Pager" model="Model.Pager" />
+        }
+    </section>
+</div>

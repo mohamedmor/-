@@ -1,0 +1,56 @@
+@model ContactFormVM
+@using LivestockMarket.Utilities
+@{ ViewData["Title"] = "تواصل مع الإدارة"; }
+<div class="row g-4 justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm p-4">
+            <h1 class="h4 mb-1">تواصل مع الإدارة</h1>
+            <p class="text-muted">عندك مشكلة أو استفسار أو عايز تبلّغ عن حاجة؟ ابعتلنا ونرد عليك.</p>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form asp-action="Index" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label asp-for="Subject" class="form-label"></label>
+                        <input asp-for="Subject" class="form-control" maxlength="120" />
+                        <span asp-validation-for="Subject" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Message" class="form-label"></label>
+                        <textarea asp-for="Message" class="form-control" rows="6" maxlength="2000"></textarea>
+                        <span asp-validation-for="Message" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" dir="ltr" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+                    <button class="btn btn-success px-4">إرسال</button>
+                </form>
+            }
+            else
+            {
+                <div class="alert alert-light border">
+                    سجّل دخول عشان تبعت رسالة للإدارة، وهنرد عليك على بياناتك.
+                    <div class="mt-2">
+                        <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path" class="btn btn-success btn-sm">تسجيل الدخول</a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-success btn-sm">حساب جديد</a>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4">
+            <h2 class="h6">طرق تانية للتواصل</h2>
+            <div class="small text-muted mb-2">@SiteInfo.WorkingHours</div>
+            <div class="mb-2"><span class="text-muted small d-block">البريد الإلكتروني</span><a href="mailto:@SiteInfo.SupportEmail" dir="ltr">@SiteInfo.SupportEmail</a></div>
+            @if (!string.IsNullOrEmpty(SiteInfo.WhatsApp))
+            {
+                <a href="https://wa.me/@SiteInfo.WhatsApp" target="_blank" rel="noopener" class="btn btn-outline-success btn-sm">واتساب</a>
+            }
+        </div>
+    </div>
+</div>

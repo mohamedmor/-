@@ -1,0 +1,49 @@
+@model List<AdminContactRowVM>
+@{
+    ViewData["Title"] = "رسايل التواصل";
+    var handled = (bool)(ViewData["Handled"] ?? false);
+    var pager = (PagerVM)ViewData["Pager"]!;
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h4 mb-0">رسايل التواصل</h1>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-link btn-sm">&larr; الإعلانات</a>
+</div>
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link @(!handled ? "active" : "")" asp-action="Contacts" asp-route-handled="false">جديدة</a></li>
+    <li class="nav-item"><a class="nav-link @(handled ? "active" : "")" asp-action="Contacts" asp-route-handled="true">تم الرد</a></li>
+</ul>
+@if (!Model.Any())
+{
+    <div class="alert alert-light border text-center py-4">مفيش رسايل هنا.</div>
+}
+@foreach (var m in Model)
+{
+    <div class="card border-0 shadow-sm mb-2">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <div class="fw-semibold">@m.Subject</div>
+                    <div class="small text-muted">
+                        @m.UserName - @m.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")
+                    </div>
+                </div>
+                @if (!m.IsHandled)
+                {
+                    <form asp-action="MarkContactHandled" asp-route-id="@m.Id" method="post"><button class="btn btn-success btn-sm">تم الرد</button></form>
+                }
+            </div>
+            <div class="mt-2" style="white-space:pre-line">@m.Message</div>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+                @if (!string.IsNullOrEmpty(m.Email))
+                {
+                    <a class="btn btn-outline-secondary btn-sm" href="mailto:@m.Email?subject=@Uri.EscapeDataString("رد: " + m.Subject)" dir="ltr">@m.Email</a>
+                }
+                @if (!string.IsNullOrEmpty(m.Phone))
+                {
+                    <a class="btn btn-outline-secondary btn-sm" href="tel:@m.Phone" dir="ltr">@m.Phone</a>
+                }
+            </div>
+        </div>
+    </div>
+}
+<partial name="_Pager" model="pager" />

@@ -1,0 +1,23 @@
+@model ReviewsPageVM
+@{ ViewData["Title"] = "تقييمات " + Model.SellerName; }
+<a asp-action="Profile" asp-route-id="@Model.SellerId" class="btn btn-link px-0">&rarr; @Model.SellerName</a>
+<div class="card border-0 shadow-sm p-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+        <h1 class="h5 mb-0">آراء العملاء</h1>
+        @if (Model.Count > 0)
+        {
+            <span class="rating-big">@Model.Average.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</span>
+            <partial name="_Stars" model="Model.Average" />
+            <span class="text-muted small">(@Model.Count تقييم)</span>
+        }
+    </div>
+    @if (!Model.Items.Any())
+    {
+        <div class="text-muted py-3">مفيش تقييمات لسه.</div>
+    }
+    @foreach (var r in Model.Items)
+    {
+        <partial name="_ReviewItem" model="r" />
+    }
+</div>
+<partial name="_Pager" model="Model.Pager" />

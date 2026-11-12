@@ -1,0 +1,13 @@
+@model ListingFormVM
+@{ ViewData["Title"] = "أضف إعلان"; }
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h1 class="h4 mb-3">أضف إعلان جديد</h1>
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            <partial name="_Form" model="Model" />
+            <button type="submit" class="btn btn-success px-4">إرسال للمراجعة</button>
+            <a asp-action="My" class="btn btn-link">إلغاء</a>
+        </form>
+    </div>
+</div>
+@section Scripts { <script src="~/js/listing-form.js" asp-append-version="true"></script> }

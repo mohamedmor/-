@@ -1,0 +1,29 @@
+@model ListingCardVM
+<a asp-controller="Listings" asp-action="Details" asp-route-id="@Model.Id" class="d-block text-decoration-none text-dark h-100 reveal">
+    <div class="card card-listing">
+        <div class="card-media">
+            @if (!string.IsNullOrEmpty(Model.MainImage))
+            {
+                <img src="@Model.MainImage" alt="@Model.Title" loading="lazy" />
+            }
+            else
+            {
+                <div class="noimg">لا توجد صورة</div>
+            }
+            @if (Model.IsFeatured)
+            {
+                <span class="ribbon">مميز</span>
+            }
+            @if (Model.Quantity > 1)
+            {
+                <span class="qty-badge">@Model.Quantity رأس</span>
+            }
+            <span class="price-tag">@Model.Price.ToString("N0") ج.م@(Model.PricingType == PricingType.PerKg ? Html.Raw(" <small>/ كيلو</small>") : Html.Raw(""))</span>
+        </div>
+        <div class="card-body">
+            <div class="card-title-line text-truncate">@Model.Title</div>
+            <div class="small text-muted">@Model.CategoryName@(Model.ConditionName != null ? " - " + Model.ConditionName : "")</div>
+            <div class="small text-muted">@Model.Governorate</div>
+        </div>
+    </div>
+</a>

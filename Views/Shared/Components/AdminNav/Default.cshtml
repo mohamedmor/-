@@ -1,0 +1,26 @@
+@model AdminNavVM
+@{
+    var items = new (string Label, string Ctrl, string Act, int Count, bool Active)[]
+    {
+        ("الإعلانات",        "Admin",      "Index",       Model.PendingListings, Model.Controller == "Admin"),
+        ("البلاغات",         "Moderation", "Reports",     Model.OpenReports,     Model.Controller == "Moderation" && Model.Action == "Reports"),
+        ("بلاغات المحادثات", "Moderation", "ChatReports", Model.OpenChatReports, Model.Controller == "Moderation" && Model.Action == "ChatReports"),
+        ("التقييمات",        "Moderation", "Reviews",     0,                     Model.Controller == "Moderation" && Model.Action == "Reviews"),
+        ("آراء الموقع",      "Moderation", "AppFeedback", Model.NewFeedback,     Model.Controller == "Moderation" && Model.Action == "AppFeedback"),
+        ("رسايل التواصل",    "Moderation", "Contacts",    Model.NewContacts,     Model.Controller == "Moderation" && Model.Action == "Contacts"),
+        ("المستخدمين",       "Moderation", "Users",       0,                     Model.Controller == "Moderation" && (Model.Action == "Users" || Model.Action == "ToggleBlock"))
+    };
+}
+<div class="admin-nav" aria-label="أقسام الإدارة">
+    <div class="container">
+        <div class="admin-nav-scroll">
+            @foreach (var it in items)
+            {
+                <a class="admin-link @(it.Active ? "active" : "")" asp-controller="@it.Ctrl" asp-action="@it.Act" aria-current="@(it.Active ? "page" : null)">
+                    @it.Label
+                    @if (it.Count > 0) { <span class="badge rounded-pill bg-danger">@it.Count</span> }
+                </a>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,42 @@
+@model AdminFeedbackVM
+@{
+    ViewData["Title"] = "آراء المستخدمين في الموقع";
+    string Kind(FeedbackKind k) => k switch { FeedbackKind.Praise => "إعجاب", FeedbackKind.Problem => "مشكلة", _ => "اقتراح" };
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h1 class="h4 mb-0">آراء المستخدمين في الموقع</h1>
+    <a asp-controller="Admin" asp-action="Index" class="btn btn-link btn-sm">&larr; الإعلانات</a>
+</div>
+@if (Model.Total > 0)
+{
+    <div class="card border-0 shadow-sm p-3 mb-3 d-flex flex-row align-items-center gap-3">
+        <span class="rating-big">@Model.Average.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)</span>
+        <partial name="_Stars" model="Model.Average" />
+        <span class="text-muted small">متوسط @Model.Total رأي</span>
+    </div>
+}
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-light border text-center py-4">مفيش آراء لسه.</div>
+}
+@foreach (var f in Model.Items)
+{
+    <div class="card border-0 shadow-sm mb-2 @(f.IsRead ? "opacity-75" : "border-start border-4 border-success")">
+        <div class="card-body d-flex flex-wrap justify-content-between gap-2">
+            <div>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <partial name="_Stars" model="(double)f.Rating" />
+                    <span class="badge @(f.Kind == FeedbackKind.Problem ? "bg-danger" : f.Kind == FeedbackKind.Praise ? "bg-success" : "bg-info text-dark")">@Kind(f.Kind)</span>
+                    <span class="small">@f.UserName</span>
+                    <span class="small text-muted">@f.CreatedAt.ToLocalTime().ToString("yyyy/MM/dd HH:mm")</span>
+                </div>
+                <div class="mt-1" style="white-space:pre-line">@f.Message</div>
+            </div>
+            @if (!f.IsRead)
+            {
+                <form asp-action="MarkFeedbackRead" asp-route-id="@f.Id" method="post"><button class="btn btn-outline-success btn-sm">تم القراءة</button></form>
+            }
+        </div>
+    </div>
+}
+<partial name="_Pager" model="Model.Pager" />

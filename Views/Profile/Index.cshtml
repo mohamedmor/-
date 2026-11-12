@@ -1,0 +1,92 @@
+@model ProfilePageVM
+@{ ViewData["Title"] = "حسابي"; }
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 text-center">
+            <div class="mb-3">
+                <partial name="_Avatar" model="(Model.ProfileImagePath, Model.Profile.FullName, 110)" />
+            </div>
+            <h1 class="h5 mb-1">@Model.Profile.FullName</h1>
+            <div class="text-muted small" dir="ltr">@Model.Email</div>
+            <div class="text-muted small mt-1">عضو منذ @Model.MemberSince.ToLocalTime().ToString("yyyy/MM")</div>
+            <div class="d-flex justify-content-around mt-3">
+                <div><div class="fs-5 fw-bold text-success">@Model.ActiveListings</div><div class="small text-muted">منشور</div></div>
+                <div><div class="fs-5 fw-bold text-warning">@Model.PendingListings</div><div class="small text-muted">مراجعة</div></div>
+                <div><div class="fs-5 fw-bold text-secondary">@Model.SoldListings</div><div class="small text-muted">تم بيعه</div></div>
+            </div>
+            <a asp-controller="Listings" asp-action="My" class="btn btn-outline-success btn-sm mt-3">إعلاناتي</a>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="card border-0 shadow-sm p-4 mb-4">
+            <h2 class="h6 text-muted mb-3">بياناتي</h2>
+            <div class="mb-3">
+                <label asp-for="Profile.FullName" class="form-label"></label>
+                <input asp-for="Profile.FullName" class="form-control" />
+                <span asp-validation-for="Profile.FullName" class="text-danger small"></span>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Profile.Phone" class="form-label"></label>
+                    <input asp-for="Profile.Phone" class="form-control" dir="ltr" />
+                    <span asp-validation-for="Profile.Phone" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Profile.Governorate" class="form-label"></label>
+                    <select asp-for="Profile.Governorate" class="form-select">
+                        <option value="">غير محدد</option>
+                        @foreach (var g in LivestockMarket.Utilities.Egypt.Governorates)
+                        {
+                            <option value="@g" selected="@(g == Model.Profile.Governorate)">@g</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Profile.Governorate" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Profile.Bio" class="form-label"></label>
+                <textarea asp-for="Profile.Bio" class="form-control" rows="3" maxlength="300" placeholder="مثال: مربي أبقار حلابة من 10 سنين"></textarea>
+                <span asp-validation-for="Profile.Bio" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">الصورة الشخصية</label>
+                <input type="file" name="Profile.Avatar" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                <div class="form-text">jpg / png / webp، حتى 2 ميجا.</div>
+                <span asp-validation-for="Profile.Avatar" class="text-danger small"></span>
+                @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                {
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="Profile.RemoveAvatar" value="true" id="rmAvatar" />
+                        <label class="form-check-label" for="rmAvatar">حذف الصورة الحالية</label>
+                    </div>
+                }
+            </div>
+            <div class="text-muted small mb-3">البريد الإلكتروني (<span dir="ltr">@Model.Email</span>) مينفعش يتغيّر من هنا.</div>
+            <div><button class="btn btn-success px-4">حفظ</button></div>
+        </form>
+
+        <form asp-action="ChangePassword" method="post" class="card border-0 shadow-sm p-4">
+            <h2 class="h6 text-muted mb-3">تغيير كلمة المرور</h2>
+            <div class="mb-3">
+                <label asp-for="Password.CurrentPassword" class="form-label"></label>
+                <input asp-for="Password.CurrentPassword" class="form-control" dir="ltr" autocomplete="current-password" />
+                <span asp-validation-for="Password.CurrentPassword" class="text-danger small"></span>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Password.NewPassword" class="form-label"></label>
+                    <input asp-for="Password.NewPassword" class="form-control" dir="ltr" autocomplete="new-password" />
+                    <span asp-validation-for="Password.NewPassword" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="Password.ConfirmNewPassword" class="form-label"></label>
+                    <input asp-for="Password.ConfirmNewPassword" class="form-control" dir="ltr" autocomplete="new-password" />
+                    <span asp-validation-for="Password.ConfirmNewPassword" class="text-danger small"></span>
+                </div>
+            </div>
+            <div><button class="btn btn-outline-success px-4">تغيير</button></div>
+        </form>
+    </div>
+</div>

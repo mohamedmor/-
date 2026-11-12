@@ -1,0 +1,41 @@
+@model List<ConversationRowVM>
+@{ ViewData["Title"] = "الرسائل"; }
+<h1 class="h4 mb-3">الرسائل</h1>
+
+@if (!Model.Any())
+{
+    <div class="card border-0 shadow-sm p-5 text-center text-muted">
+        مفيش رسايل لسه. افتح أي إعلان واضغط "راسل البائع" عشان تبدأ محادثة.
+    </div>
+}
+@foreach (var c in Model)
+{
+    <a asp-action="Thread" asp-route-id="@c.Id" class="text-decoration-none text-dark">
+        <div class="card border-0 shadow-sm mb-2 @(c.Unread > 0 ? "border-start border-4 border-success" : "")">
+            <div class="card-body d-flex align-items-center gap-3 py-3">
+                <partial name="_Avatar" model="(c.OtherAvatar, c.OtherName, 48)" />
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="d-flex justify-content-between gap-2">
+                        <span class="fw-semibold">@c.OtherName</span>
+                        <time class="small text-muted msg-time" data-utc="@DateTime.SpecifyKind(c.LastAt, DateTimeKind.Utc).ToString("o")"></time>
+                    </div>
+                    <div class="small text-muted text-truncate">بخصوص: @c.ListingTitle</div>
+                    <div class="text-truncate @(c.Unread > 0 ? "fw-bold" : "text-muted")">@c.LastText</div>
+                </div>
+                @if (c.Unread > 0)
+                {
+                    <span class="badge rounded-pill bg-danger">@c.Unread</span>
+                }
+            </div>
+        </div>
+    </a>
+}
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.msg-time').forEach(function (t) {
+            var d = new Date(t.dataset.utc);
+            t.textContent = d.toLocaleString('ar-EG', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+        });
+    </script>
+}
